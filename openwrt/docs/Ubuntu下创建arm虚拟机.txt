@@ -1,0 +1,54 @@
+一、环境说明
+host: 
+	host-os:  Ubuntu 16 4.4.0-146-generic x86_64
+	host-cpu:  Intel(R) Core(TM) i7-5557U CPU @ 3.10GHz
+
+guest:
+	guest-os:  OpenWrt 4.14.118 armv7l
+	guest-cpu: ARMv7 Processor rev 1 (v7l)
+
+二、在Qemu-ARM 中运行OpenWrt
+1、使用initramfs启动
+	这是可用于测试图像的最简单方法。但是，它完全在RAM中运行：任何修改都会在重新启动时丢失。
+	使用此引导方法运行的命令如下，此处使用64 MB的RAM：
+	qemu-system-arm -nographic -M virt -m 64 -kernel openwrt-armvirt-32-zImage-initramfs
+
+2、网络配置
+	QEMU提供了几种为虚拟机提供网络连接的选项，下面只介绍几种基础的，请参阅qemu的帮助手册查看所有-net选项。
+	1）提供对OpenWrt的Internet访问
+		QEMU的默认网络模式是“用户模式网络堆栈user mode network stack”。
+		在此模式下，qemu充当outbound TCP / UDP连接的代理。它还为虚拟机提供DHCP和DNS服务。
+		要提供对模拟的OpenWrt系统的Internet访问，请使用如下命令：
+		qemu-system-arm -net nic,vlan=0 -net nic,vlan=1 -net user,vlan=1 \
+			-nographic -M virt -m 64 -kernel openwrt-armvirt-32-zImage-initramfs 
+			
+		#qemu-system-arm -M virt -net nic,model=virtio -nographic -m 64 -kernel openwrt-armvirt-32-zImage-initramfs 
+		在这里，我们在模拟的OpenWrt系统中设置了两个网卡：
+			eth0：用作OpenWrt中的LAN（此处未连接任何内容）
+			eth1：在OpenWrt中用作WAN，并连接到qemu，qemu将代理所有到Internet的TCP/UDP连接。
+		OpenWrt系统应该在eth1上获得IPv4和IPv6（通过DHCP/DHCPv6）。 
+		范围将是10.0.2.0/24和fec0 ::/64（qemu默认值，请参阅qemu以配置其他范围））。
+	
+		PS:上述方法在我自己的机器上无法创建网卡，报错如下：(但采用“提供对OpenWrt内部LUCI的访问”中的方法创建的网卡是OK的)
+			Warning: requested NIC (anonymous, model unspecified) was not created (not supported by this machine?)
+
+	2）提供对OpenWrt内部LUCI的访问
+	
+	
+	3）使用KVM igb网络接口
+
+3、高级启动方法
+	1）使用KVM加速
+	2）使用单独的rootfs引导
+	3）使用本地目录作为rootfs引导
+	4）用kvmtool运行
+
+三、一个实际的例子
+	xxxx介绍
+	1）为虚拟化准备debian（测试中为7.1）
+	2）虚拟化
+
+
+	
+
+	
