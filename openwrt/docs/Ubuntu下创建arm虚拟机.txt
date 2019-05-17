@@ -33,9 +33,36 @@ guest:
 			Warning: requested NIC (anonymous, model unspecified) was not created (not supported by this machine?)
 
 	2）提供对OpenWrt内部LUCI的访问
-	
-	
+		LUCI是OpenWrt使用的Web UI。 如果你想检查LUCI的工作方式或者使用LUCI-apps，(下面)这个设置适合你。
+		注意：此设置需要一些权限（Linux下的CAP_NET_ADMIN和CAP_MKNOD），因此在sudo下运行它更容易。
+		需要适配修改IMAGE变量为你的OpenWrt版本（LAN变量也可以修改），然后在sudo下运行它
+			#!/bin/sh
+			IMAGE=openwrt-armvirt-32-zImage-initramfs                               
+			LAN=openwrttap0
+			# create tap interface which will be connected to OpenWrt LAN NIC
+			ip tuntap add mode tap $LAN
+			ip link set dev $LAN up
+			# configure interface with static ip to avoid overlapping routes                         
+			ip addr add 192.168.1.101/24 dev $LAN
+			qemu-system-arm \
+				-device virtio-net-pci,netdev=lan \
+				-netdev tap,id=lan,ifname=$LAN,script=no,downscript=no \
+				-device virtio-net-pci,netdev=wan \
+				-netdev user,id=wan \
+				-M virt -nographic -m 64 -kernel $IMAGE
+			# cleanup. delete tap interface created earlier
+			ip addr flush dev $LAN
+			ip link set dev $LAN down
+			ip tuntap del mode tap dev $LAN
+
+	（上面配置中的）网络如何运作：
+		eth0：在OpenWrt中用作LAN，并连接到主机系统中的openwrttap0（静态地址192.168.1.101/24），提供对LUCI的访问，网址为http://192.168.1.1
+		eth1：在OpenWrt中用作WAN，并连接到qemu，它将代理所有到Internet的TCP / UDP连接
+		说明：snapshot版本不含LUCI，访问http://192.168.1.1会报错，网页提示“192.168.1.1 拒绝了我们的连接请求”。
+
 	3）使用KVM igb网络接口
+
+
 
 3、高级启动方法
 	1）使用KVM加速
@@ -49,6 +76,5 @@ guest:
 	2）虚拟化
 
 
-	
 
 	
