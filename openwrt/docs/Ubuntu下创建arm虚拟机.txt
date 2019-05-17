@@ -60,15 +60,42 @@ guest:
 		eth1：在OpenWrt中用作WAN，并连接到qemu，它将代理所有到Internet的TCP / UDP连接
 		说明：snapshot版本不含LUCI，访问http://192.168.1.1会报错，网页提示“192.168.1.1 拒绝了我们的连接请求”。
 
-	3）使用KVM igb网络接口
-
-
+	3）使用KVM igb网络接口：这部分不展开。
 
 3、高级启动方法
 	1）使用KVM加速
+	这将更快，但只有在host的CPU的架构与目标虚拟机的CPU相同时才会起作用。
+	qemu-system-arm -nographic -M virt,accel=kvm -cpu host -m 64 -kernel openwrt-armvirt-32-zImage-initramfs
+
 	2）使用单独的rootfs引导
-	3）使用本地目录作为rootfs引导
+	qemu-system-arm -nographic -M virt -m 64 -kernel openwrt-armvirt-32-zImage \
+		-drive file=openwrt-armvirt-32-root.ext4,format=raw,if=virtio -append 'root=/dev/vda rootwait'
+
+
+	qemu-system-arm -nographic -M virt -m 64 -kernel openwrt-armvirt-32-zImage -drive file=openwrt-armvirt-32-root.ext4,format=raw,if=virtio -append 'root=/dev/vda rootwait'
+		
+	3）使用本地目录作为rootfs引导。
+		qemu-system-arm -nographic -M virt -m 64 -kernel openwrt-armvirt-32-zImage \
+	  -fsdev local,id=rootdev,path=root-armvirt/,security_model=none \
+	  -device virtio-9p-pci,fsdev=rootdev,mount_tag=/dev/root \
+	  -append 'rootflags=trans=virtio,version=9p2000.L,cache=loose rootfstype=9p'
+	
+		如果没有 root-armvirt目录，则启动报错。
+		创建了该目录后启动不报错，但是内核panic。 这里不继续往下处理了。
+	
 	4）用kvmtool运行
+		# start a named machine
+		lkvm run -k openwrt-armvirt-32-zImage -i openwrt-armvirt-32-rootfs.cpio --name armvirt0
+
+		# start with virtio-9p rootfs
+		lkvm run -k openwrt-armvirt-32-zImage -d root-armvirt/
+
+		# stop "armvirt0"
+		lkvm stop --name armvirt0
+
+		# stop all
+		lkvm stop --all
+
 
 三、一个实际的例子
 	xxxx介绍
