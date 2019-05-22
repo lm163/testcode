@@ -54,12 +54,18 @@ guest:
 
 			尝试3：
 			qemu-system-arm -netdev tap,ifname=tap0,script=no,downscript=no,id=my_owrt -device driver=virtio-net,netdev=my_owrt -nographic -M virt -m 64 -kernel openwrt-armvirt-32-zImage-initramfs 
-			没有前面的报错，但是没有出去的路由，需要配置，暂时不会配置。
+			没有前面的报错，但是没有出去的路由，需要配置，继续寻找配置方法。
 			参考文章：
 			https://unix.stackexchange.com/questions/214039/qemu-aarch64-and-networking-connections
 			
 			尝试4：
 			需要参考文章： https://wiki.qemu.org/Documentation/Networking
+			
+			OK: qemu-system-arm -netdev tap,ifname=tap0,script=no,downscript=no,id=my_owrt -device driver=virtio-net,netdev=my_owrt -nographic -M virt -m 64 -kernel openwrt-armvirt-32-zImage-initramfs 
+			
+			qemu-system-arm -net tap -net nic -nographic -M virt -m 64 -kernel openwrt-armvirt-32-zImage-initramfs 
+			
+			
 			
 sudo qemu-system-aarch64 -machine virt -cpu cortex-a57 -nographic -smp 1 -m 512 \
     -global virtio-blk-device.scsi=off -device virtio-scsi-device,id=scsi \
