@@ -32,6 +32,49 @@ guest:
 		PS:上述方法在我自己的机器上无法创建网卡，报错如下：(但采用“提供对OpenWrt内部LUCI的访问”中的方法创建的网卡是OK的)
 			Warning: requested NIC (anonymous, model unspecified) was not created (not supported by this machine?)
 
+		2019.5.22：再次尝试设置internet访问：
+			尝试1：
+			qemu-system-arm -net nic,vlan=0 -net nic,vlan=1 -net user,vlan=1 -nographic -M virt -m 64 -kernel openwrt-armvirt-32-zImage-initramfs 
+			报错：
+			Warning: hub port hub1port0 has no peer
+			Warning: vlan 1 with no nics
+			Warning: hub port hub0port0 has no peer
+			Warning: netdev hub0port0 has no peer
+			Warning: netdev hub1port0 has no peer
+			Warning: requested NIC (anonymous, model unspecified) was not created (not supported by this machine?)
+			Warning: requested NIC (anonymous, model unspecified) was not created (not supported by this machine?)
+
+			尝试2：
+			qemu-system-arm -net nic,vlan=0 -net user,vlan=0 -nographic -M virt -m 64 -kernel openwrt-armvirt-32-zImage-initramfs 
+			报错：
+			Warning: hub port hub0port0 has no peer
+			Warning: vlan 0 with no nics
+			Warning: netdev hub0port0 has no peer
+			Warning: requested NIC (anonymous, model unspecified) was not created (not supported by this machine?)
+
+			尝试3：
+			qemu-system-arm -netdev tap,ifname=tap0,script=no,downscript=no,id=my_owrt -device driver=virtio-net,netdev=my_owrt -nographic -M virt -m 64 -kernel openwrt-armvirt-32-zImage-initramfs 
+			没有前面的报错，但是没有出去的路由，需要配置，暂时不会配置。
+			参考文章：
+			https://unix.stackexchange.com/questions/214039/qemu-aarch64-and-networking-connections
+			
+			尝试4：
+			需要参考文章： https://wiki.qemu.org/Documentation/Networking
+			
+sudo qemu-system-aarch64 -machine virt -cpu cortex-a57 -nographic -smp 1 -m 512 \
+    -global virtio-blk-device.scsi=off -device virtio-scsi-device,id=scsi \
+    -drive file=ubuntu-core-14.04.1-core-arm64.img,id=coreimg,cache=unsafe,if=none -device scsi-hd,drive=coreimg \
+    -kernel vmlinuz-3.13.0-55-generic \
+    -initrd initrd.img-3.13.0-55-generic \
+    -netdev user,id=unet -device virtio-net-device,netdev=unet \
+    -net nic -net tap,ifname=tap0,script=no,downscript=no \
+    --append "console=ttyAMA0 root=/dev/sda"
+	
+		
+
+
+
+
 	2）提供对OpenWrt内部LUCI的访问
 		LUCI是OpenWrt使用的Web UI。 如果你想检查LUCI的工作方式或者使用LUCI-apps，(下面)这个设置适合你。
 		注意：此设置需要一些权限（Linux下的CAP_NET_ADMIN和CAP_MKNOD），因此在sudo下运行它更容易。
