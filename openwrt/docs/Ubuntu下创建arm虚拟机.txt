@@ -61,7 +61,7 @@ guest:
 			尝试4：
 			需要参考文章： https://wiki.qemu.org/Documentation/Networking
 			
-			OK: 
+			OK, 但是没有配置网络，如果配置网络应该OK（在host上配置网桥，将tap0挂接到网桥）。
 			qemu-system-arm -netdev tap,ifname=tap0,script=no,downscript=no,id=my_owrt -device driver=virtio-net,netdev=my_owrt -nographic -M virt -m 64 -kernel openwrt-armvirt-32-zImage-initramfs 
 			
 			尝试5:
@@ -71,6 +71,9 @@ guest:
 			Warning: vlan 0 with no nics
 			Warning: netdev hub0port1 has no peer
 			Warning: requested NIC (anonymous, model unspecified) was not created (not supported by this machine?)
+
+			尝试6：
+			采用下面访问LUCI的方法，可以成功，并且从host ssh到 openwrt里面。
 
 	2）提供对OpenWrt内部LUCI的访问
 		LUCI是OpenWrt使用的Web UI。 如果你想检查LUCI的工作方式或者使用LUCI-apps，(下面)这个设置适合你。
@@ -110,9 +113,6 @@ guest:
 	2）使用单独的rootfs引导
 	qemu-system-arm -nographic -M virt -m 64 -kernel openwrt-armvirt-32-zImage \
 		-drive file=openwrt-armvirt-32-root.ext4,format=raw,if=virtio -append 'root=/dev/vda rootwait'
-
-
-	qemu-system-arm -nographic -M virt -m 64 -kernel openwrt-armvirt-32-zImage -drive file=openwrt-armvirt-32-root.ext4,format=raw,if=virtio -append 'root=/dev/vda rootwait'
 		
 	3）使用本地目录作为rootfs引导。
 		qemu-system-arm -nographic -M virt -m 64 -kernel openwrt-armvirt-32-zImage \
