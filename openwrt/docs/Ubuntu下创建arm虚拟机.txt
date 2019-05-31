@@ -1,3 +1,6 @@
+参考资料:
+	OpenWrt开发者指南：https://openwrt.org/zh/docs/guide-developer/start
+
 一、环境说明
 host: 
 	host-os:  Ubuntu 16 4.4.0-146-generic x86_64
