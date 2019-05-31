@@ -61,25 +61,16 @@ guest:
 			尝试4：
 			需要参考文章： https://wiki.qemu.org/Documentation/Networking
 			
-			OK: qemu-system-arm -netdev tap,ifname=tap0,script=no,downscript=no,id=my_owrt -device driver=virtio-net,netdev=my_owrt -nographic -M virt -m 64 -kernel openwrt-armvirt-32-zImage-initramfs 
+			OK: 
+			qemu-system-arm -netdev tap,ifname=tap0,script=no,downscript=no,id=my_owrt -device driver=virtio-net,netdev=my_owrt -nographic -M virt -m 64 -kernel openwrt-armvirt-32-zImage-initramfs 
 			
+			尝试5:
 			qemu-system-arm -net tap -net nic -nographic -M virt -m 64 -kernel openwrt-armvirt-32-zImage-initramfs 
-			
-			
-			
-sudo qemu-system-aarch64 -machine virt -cpu cortex-a57 -nographic -smp 1 -m 512 \
-    -global virtio-blk-device.scsi=off -device virtio-scsi-device,id=scsi \
-    -drive file=ubuntu-core-14.04.1-core-arm64.img,id=coreimg,cache=unsafe,if=none -device scsi-hd,drive=coreimg \
-    -kernel vmlinuz-3.13.0-55-generic \
-    -initrd initrd.img-3.13.0-55-generic \
-    -netdev user,id=unet -device virtio-net-device,netdev=unet \
-    -net nic -net tap,ifname=tap0,script=no,downscript=no \
-    --append "console=ttyAMA0 root=/dev/sda"
-	
-		
-
-
-
+			报错：
+			Warning: hub port hub0port1 has no peer
+			Warning: vlan 0 with no nics
+			Warning: netdev hub0port1 has no peer
+			Warning: requested NIC (anonymous, model unspecified) was not created (not supported by this machine?)
 
 	2）提供对OpenWrt内部LUCI的访问
 		LUCI是OpenWrt使用的Web UI。 如果你想检查LUCI的工作方式或者使用LUCI-apps，(下面)这个设置适合你。
@@ -87,12 +78,12 @@ sudo qemu-system-aarch64 -machine virt -cpu cortex-a57 -nographic -smp 1 -m 512 
 		需要适配修改IMAGE变量为你的OpenWrt版本（LAN变量也可以修改），然后在sudo下运行它
 			#!/bin/sh
 			IMAGE=openwrt-armvirt-32-zImage-initramfs                               
-			LAN=openwrttap0
+			LAN=owrttap0
 			# create tap interface which will be connected to OpenWrt LAN NIC
 			ip tuntap add mode tap $LAN
 			ip link set dev $LAN up
 			# configure interface with static ip to avoid overlapping routes                         
-			ip addr add 192.168.1.101/24 dev $LAN
+			ip addr add 192.168.1.10/24 dev $LAN
 			qemu-system-arm \
 				-device virtio-net-pci,netdev=lan \
 				-netdev tap,id=lan,ifname=$LAN,script=no,downscript=no \
@@ -105,7 +96,7 @@ sudo qemu-system-aarch64 -machine virt -cpu cortex-a57 -nographic -smp 1 -m 512 
 			ip tuntap del mode tap dev $LAN
 
 	（上面配置中的）网络如何运作：
-		eth0：在OpenWrt中用作LAN，并连接到主机系统中的openwrttap0（静态地址192.168.1.101/24），提供对LUCI的访问，网址为http://192.168.1.1
+		eth0：在OpenWrt中用作LAN，并连接到主机系统中的owrttap0（静态地址192.168.1.101/24），提供对LUCI的访问，网址为http://192.168.1.1
 		eth1：在OpenWrt中用作WAN，并连接到qemu，它将代理所有到Internet的TCP / UDP连接
 		说明：snapshot版本不含LUCI，访问http://192.168.1.1会报错，网页提示“192.168.1.1 拒绝了我们的连接请求”。
 
